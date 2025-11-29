@@ -19,17 +19,17 @@ router.get('/', async (req, res) => {
         const offset = (page - 1) * limit;
         const search = req.query.search || "";
 
-        // 작성자 이름(users.name)도 같이 가져오기 위해 JOIN 사용
-        const sql = `
-            SELECT p.*, u.name AS author_name 
-            FROM posts p 
-            LEFT JOIN users u ON p.author_id = u.id
-            WHERE p.title LIKE ? 
-            ORDER BY 
-                CASE WHEN p.title LIKE '[공지]%' THEN 0 ELSE 1 END ASC,
-                p.id DESC
-            LIMIT ? OFFSET ?
-        `;
+            // ORDER BY 부분을 '제목([공지])' 검사에서 -> '카테고리(공지)' 검사로 변경
+const sql = `
+    SELECT p.*, u.name AS author_name 
+    FROM posts p 
+    LEFT JOIN users u ON p.author_id = u.id
+    WHERE p.title LIKE ? 
+    ORDER BY 
+        CASE WHEN p.category = '공지' THEN 0 ELSE 1 END ASC,
+        p.id DESC
+    LIMIT ? OFFSET ?
+`;
 
         const [rows] = await pool.query(sql, [`%${search}%`, limit, offset]);
 
@@ -56,19 +56,30 @@ router.get('/new', checkLogin, (req, res) => {
     res.render("new");
 });
 
-// 글 저장 (작성자 ID 저장 추가)
-router.post('/', checkLogin, async (req, res) => {
+// 글 저장 (작성자 ID 저장 추가) + 카테고리 추가(11.28)
+router.post('/:id/edit', checkLogin, async (req, res) => {
     try {
-        const { title, content } = req.body;
-        const author_id = req.session.user.id; // << 로그인한 사람의 ID
+        const id = req.params.id;
+        // 1. 여기서도 category를 받아옵니다.
+        const { title, content, category } = req.body;
+        const isAdmin = req.session.user.is_admin === 1;
 
+        // 2. [변경됨] 수정할 때도 공지사항 권한 체크
+        if (category === '공지' && !isAdmin) {
+            return res.send(`<script>alert('🛑 관리자만 공지사항을 선택할 수 있습니다.'); history.back();</script>`);
+        }
+
+        // 3. DB 업데이트할 때 category도 같이 수정
         await pool.query(
-            `INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)`,
-            [title, content, author_id]
+            `UPDATE posts SET title=?, content=?, category=? WHERE id=?`,
+            [title, content, category, id]
         );
-        res.redirect('/posts');
+
+        res.redirect(`/posts/${id}`);
+
     } catch (error) {
-        res.status(500).send("글 작성 오류");
+        console.error(error);
+        res.status(500).send("수정 오류");
     }
 });
 

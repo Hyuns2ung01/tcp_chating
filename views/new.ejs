@@ -10,6 +10,24 @@
     </style>
 </head>
 <body>
+    <h1>카테고리</h1>
+    <form action="/posts" method="POST">
+    
+    <div style="margin-bottom: 15px;">
+        <label for="category" style="font-weight:bold;">카테고리:</label>
+        <select name="category" id="category" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+            <option value="자유">자유</option>
+            <option value="중고거래">📦 중고거래</option>
+            <option value="공구">🛒 공구</option>
+            <option value="가입인사">👋 가입인사</option>
+            <% if (user && user.is_admin) { %>
+                <option value="공지" style="color:red; font-weight:bold;">📢 공지사항</option>
+            <% } %>
+        </select>
+    </div>
+    </form>
+
+    <hr>
     <h1>✏ 새 글 작성</h1>
 
     <form action="/posts" method="POST">

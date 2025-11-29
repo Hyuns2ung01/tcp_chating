@@ -1,27 +1,36 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
     <title>게시글 목록</title>
     <style>
-        body { width: 800px; margin: auto; font-family: sans-serif; }
-        h1 { margin-top: 20px; }
-        
-        /* 상단 바 레이아웃 수정 (아이템이 3개가 되므로 정렬 방식 유지) */
-        .top-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; /* 수직 중앙 정렬 추가 */
-            margin: 15px 0; 
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee; /* 구분선 추가 */
+        body {
+            width: 800px;
+            margin: auto;
+            font-family: 'Apple SD Gothic Neo', sans-serif;
         }
-        
-        .post { padding: 12px; border-bottom: 1px solid #ddd; }
-        .pagination a { margin: 0 5px; text-decoration: none; }
-        .active { font-weight: bold; text-decoration: underline; }
-        
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        /* 상단 바 레이아웃 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .post {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
         .no-result {
             text-align: center;
             padding: 50px 0;
@@ -29,39 +38,117 @@
             font-size: 1.2em;
         }
 
-        /* 로그인/회원가입 링크 스타일 */
         .auth-box a {
             margin-right: 10px;
             text-decoration: none;
             color: #333;
             font-size: 0.9em;
         }
+
         .admin-tag {
-            color: red; 
+            color: red;
             font-weight: bold;
             margin-left: 5px;
         }
+
+        /* 카테고리 뱃지 스타일 */
+        .badge-cat {
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+            color: white;
+            background-color: #999;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .cat-used {
+            background-color: #FF9800;
+        }
+
+        /* 주황색 (중고) */
+        .cat-buy {
+            background-color: #2196F3;
+        }
+
+        /* 파란색 (공구) */
+        .cat-hi {
+            background-color: #4CAF50;
+        }
+
+        /* 초록색 (인사) */
+        .cat-notice {
+            background-color: #D32F2F;
+        }
+
+        /* 빨간색 (공지) */
+        .cat-free {
+            background-color: #9E9E9E;
+        }
+
+        /* 회색 (자유) */
+
+        /* 페이지네이션 스타일 */
+        .pagination {
+            margin-top: 30px;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .pagination a {
+            display: inline-block;
+            min-width: 30px;
+            height: 30px;
+            line-height: 30px;
+            margin: 0 3px;
+            padding: 0 5px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .pagination .active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            pointer-events: none;
+        }
     </style>
 </head>
+
 <body>
     <h1>📋 게시글 목록</h1>
 
     <div class="top-bar">
         <div class="auth-box">
             <% if (user) { %>
-                <span>👋 <strong><%= user.name %></strong>님</span>
+                <span>👋 <strong>
+                        <%= user.name %>
+                    </strong>님</span>
                 <a href="/logout" style="color: blue; margin-left: 10px;">로그아웃</a>
-                
+
                 <% if (user.is_admin) { %>
                     <a href="/admin" class="admin-tag">[관리자 페이지]</a>
-                <% } %>
-            <% } else { %>
-                <a href="/login">로그인</a>
-                <a href="/register">회원가입</a>
-            <% } %>
+                    <% } %>
+                        <a href="/chat" style="margin-left: 10px; text-decoration: none;">💬 채팅방</a>
+
+                        <% } else { %>
+                            <a href="/login">로그인</a>
+                            <a href="/register">회원가입</a>
+                            <% } %>
         </div>
 
-        <form method="GET" action="/posts">
+        <form method="GET" action="/posts" style="display:inline-block;">
             <input type="text" name="search" value="<%= search %>" placeholder="검색어 입력" />
             <button type="submit">검색</button>
         </form>
@@ -70,35 +157,67 @@
     </div>
 
     <div>
-        <% if (posts.length === 0) { %>
+        <% if (posts.length===0) { %>
             <div class="no-result">
                 게시물이 존재하지 않습니다.
             </div>
-        <% } else { %>
-            <% posts.forEach(post => { %>
-                <div class="post">
-                    <a href="/posts/<%= post.id %>">
-                        <% if (post.title.startsWith('[공지]')) { %>
-        <strong style="color: red;">📢 <%= post.title %></strong>
-    <% } else { %>
-        <strong><%= post.title %></strong>
-    <% } %>
-                    </a>
-                    <div>조회수: <%= post.view_count %></div>
-                </div>
-            <% }) %>
-        <% } %>
+            <% } else { %>
+                <% posts.forEach(post=> { %>
+                    <div class="post">
+                        <a href="/posts/<%= post.id %>"
+                            style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+
+                            <% let badgeClass='cat-free' ; if (post.category==='중고거래' ) badgeClass='cat-used' ; else if
+                                (post.category==='공구' ) badgeClass='cat-buy' ; else if (post.category==='가입인사' )
+                                badgeClass='cat-hi' ; else if (post.category==='공지' ) badgeClass='cat-notice' ; %>
+                                <span class="badge-cat <%= badgeClass %>">
+                                    <%= post.category || '자유' %>
+                                </span>
+
+                                <% if (post.title.startsWith('[공지]')) { %>
+                                    <strong style="color: red;">📢 <%= post.title %></strong>
+                                    <% } else { %>
+                                        <strong>
+                                            <%= post.title %>
+                                        </strong>
+                                        <% } %>
+                        </a>
+
+                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                            <span>작성자: <%= post.author_name || '탈퇴한 유저' %></span> |
+                            <span>조회수: <%= post.view_count %></span>
+                        </div>
+                    </div>
+                    <% }) %>
+                        <% } %>
     </div>
 
     <div class="pagination">
-        <% for (let i = 1; i <= totalPages; i++) { %>
-            <% if (i === currentPage) { %>
-                <a class="active"><%= i %></a>
-            <% } else { %>
-                <a href="/posts?page=<%= i %>&search=<%= search %>"><%= i %></a>
-            <% } %>
-        <% } %>
+        <% const maxPageBtn=8; let startPage=Math.max(1, currentPage - Math.floor(maxPageBtn / 2)); let
+            endPage=Math.min(totalPages, startPage + maxPageBtn - 1); if (endPage - startPage + 1 < maxPageBtn) {
+            startPage=Math.max(1, endPage - maxPageBtn + 1); } %>
+
+            <% if (currentPage> 1) { %>
+                <a href="/posts?page=<%= currentPage - 1 %>&search=<%= search %>">&lt;</a>
+                <% } %>
+
+                    <% for (let i=startPage; i <=endPage; i++) { %>
+                        <% if (i===currentPage) { %>
+                            <a class="active">
+                                <%= i %>
+                            </a>
+                            <% } else { %>
+                                <a href="/posts?page=<%= i %>&search=<%= search %>">
+                                    <%= i %>
+                                </a>
+                                <% } %>
+                                    <% } %>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="/posts?page=<%= currentPage + 1 %>&search=<%= search %>">&gt;</a>
+                                            <% } %>
     </div>
 
 </body>
+
 </html>

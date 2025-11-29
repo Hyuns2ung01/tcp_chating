@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>
+        <%= room.title %>
+    </title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background-color: #b2c7d9;
+            margin: 0;
+        }
+
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #b2c7d9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .chat-header a {
+            text-decoration: none;
+            color: #333;
+            background: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 20px;
+            flex: 1;
+            overflow-y: scroll;
+        }
+
+        #messages li {
+            margin-bottom: 10px;
+            clear: both;
+        }
+
+        .msg-box {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .msg-info {
+            font-size: 0.8em;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .my-msg {
+            text-align: right;
+        }
+
+        .my-msg .msg-box {
+            background: #ffeb33;
+            float: right;
+            text-align: left;
+        }
+
+        .other-msg {
+            text-align: left;
+        }
+
+        .other-msg .msg-box {
+            background: #ffffff;
+            float: left;
+        }
+
+        .input-area {
+            padding: 10px;
+            background: #fff;
+            display: flex;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background: #ffeb33;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="invite-bar"
+                style="background: white; padding: 10px; display: flex; gap: 5px; border-bottom: 1px solid #ddd;">
+                <form action="/chat/<%= room.id %>/invite" method="POST" style="width: 100%; display: flex; gap: 5px;">
+                    <input type="text" name="targetUsername" placeholder="초대할 유저 아이디 입력" required
+                        style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button type="submit"
+                        style="background-color: #2196F3; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">초대</button>
+                </form>
+            </div>
+            <h2>💬 <%= room.title %>
+            </h2>
+            <a href="/chat">나가기</a>
+        </div>
+
+        <ul id="messages">
+            <% messages.forEach(msg=> { %>
+                <li class="<%= msg.user_id === user.id ? 'my-msg' : 'other-msg' %>">
+                    <div class="msg-info">
+                        <%= msg.name %>
+                    </div>
+                    <div class="msg-box">
+                        <%= msg.content %>
+                    </div>
+                </li>
+                <% }) %>
+        </ul>
+
+        <form id="form" class="input-area">
+            <input id="input" autocomplete="off" placeholder="메시지 입력..." />
+            <button>전송</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        // 현재 방 번호와 내 정보
+        var roomId = "<%= room.id %>";
+        var myName = "<%= user.name %>";
+        var myId = parseInt("<%= user.id %>");
+
+        // ★ 서버에 "나 이 방에 들어왔어"라고 알림
+        socket.emit('join room', roomId);
+
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+        var messages = document.getElementById('messages');
+
+        // 스크롤을 맨 아래로 내리기
+        window.scrollTo(0, document.body.scrollHeight);
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (input.value) {
+                // 서버로 보낼 때 방 번호(roomId)도 같이 보냄
+                socket.emit('chat message', {
+                    roomId: roomId,
+                    name: myName,
+                    text: input.value,
+                    userId: myId
+                });
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function (data) {
+            var item = document.createElement('li');
+            var isMe = data.name === myName;
+
+            item.className = isMe ? 'my-msg' : 'other-msg';
+            item.innerHTML = `
+                <div class="msg-info">${data.name}</div>
+                <div class="msg-box">${data.text}</div>
+            `;
+
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+    </script>
+</body>
+
+</html>

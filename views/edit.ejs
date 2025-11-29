@@ -1,23 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
-    <title>글 수정</title>
+    <title>글 수정하기</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        body { width: 800px; margin: auto; font-family: sans-serif; }
-        input, textarea { width: 100%; padding: 8px; margin-bottom: 15px; }
+        body { width: 800px; margin: auto; font-family: sans-serif; padding: 20px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        textarea { height: 300px; resize: vertical; }
+        button { padding: 10px 20px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1>✏ 글 수정</h1>
+    <h1>✏️ 글 수정하기</h1>
 
     <form action="/posts/<%= post.id %>/edit" method="POST">
-        <input type="text" name="title" value="<%= post.title %>" required />
-        <textarea name="content" rows="10" required><%= post.content %></textarea>
-        <button type="submit">수정 완료</button>
-    </form>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">카테고리</label>
+            <select name="category" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 200px;">
+                <option value="자유" <%= post.category === '자유' ? 'selected' : '' %>>자유</option>
+                <option value="중고거래" <%= post.category === '중고거래' ? 'selected' : '' %>>📦 중고거래</option>
+                <option value="공구" <%= post.category === '공구' ? 'selected' : '' %>>🛒 공구</option>
+                <option value="가입인사" <%= post.category === '가입인사' ? 'selected' : '' %>>👋 가입인사</option>
+    
+                <% if (user && user.is_admin) { %>
+                    <option value="공지" style="color:red; font-weight:bold;" <%= post.category === '공지' ? 'selected' : '' %>>📢 공지사항</option>
+                <% } %>
+            </select>
+        </div>
 
-    <a href="/posts/<%= post.id %>">← 뒤로가기</a>
+        <label style="font-weight:bold;">제목</label>
+        <input type="text" name="title" value="<%= post.title %>" required>
+
+        <label style="font-weight:bold;">내용</label>
+        <textarea name="content" required><%= post.content %></textarea>
+
+        <div style="margin-top: 10px;">
+            <button type="submit" style="background-color: #4CAF50; color: white; border: none; border-radius: 4px;">수정 완료</button>
+            <a href="/posts/<%= post.id %>" style="margin-left: 10px; text-decoration: none; color: #666;">취소</a>
+        </div>
+    </form>
 </body>
 </html>
