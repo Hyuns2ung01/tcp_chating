@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// [로그인 체크 미들웨어] 
-// 이 함수를 라우터에 끼워넣으면 로그인을 검사합니다.
+// 로그인 체크
 const checkLogin = (req, res, next) => {
     if (!req.session.user) {
         return res.send(`<script>alert('로그인이 필요한 서비스입니다.'); location.href='/login';</script>`);
@@ -11,32 +10,46 @@ const checkLogin = (req, res, next) => {
     next();
 };
 
-// 목록 + 검색 + 페이징
+// 1. 목록 + 검색 + 페이징 + 카테고리 필터
 router.get('/', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const offset = (page - 1) * limit;
+
         const search = req.query.search || "";
+        const category = req.query.category || "all";
 
-            // ORDER BY 부분을 '제목([공지])' 검사에서 -> '카테고리(공지)' 검사로 변경
-const sql = `
-    SELECT p.*, u.name AS author_name 
-    FROM posts p 
-    LEFT JOIN users u ON p.author_id = u.id
-    WHERE p.title LIKE ? 
-    ORDER BY 
-        CASE WHEN p.category = '공지' THEN 0 ELSE 1 END ASC,
-        p.id DESC
-    LIMIT ? OFFSET ?
-`;
+        let whereClause = "WHERE p.title LIKE ?";
+        let queryParams = [`%${search}%`];
 
-        const [rows] = await pool.query(sql, [`%${search}%`, limit, offset]);
+        if (category !== "all") {
+            if (category === "공지") {
+                whereClause += " AND p.category = ?";
+                queryParams.push(category);
+            } else {
+                whereClause += " AND (p.category = ? OR p.category = '공지')";
+                queryParams.push(category);
+            }
+        }
 
-        const [[{ total }]] = await pool.query(
-            `SELECT COUNT(*) AS total FROM posts WHERE title LIKE ?`,
-            [`%${search}%`]
-        );
+        let countSql = `SELECT COUNT(*) AS total FROM posts p ${whereClause}`;
+        const [[{ total }]] = await pool.query(countSql, queryParams);
+
+        queryParams.push(limit, offset);
+
+        const sql = `
+            SELECT p.*, u.name AS author_name 
+            FROM posts p 
+            LEFT JOIN users u ON p.author_id = u.id
+            ${whereClause}
+            ORDER BY 
+                CASE WHEN p.category = '공지' THEN 0 ELSE 1 END ASC,
+                p.id DESC
+            LIMIT ? OFFSET ?
+        `;
+
+        const [rows] = await pool.query(sql, queryParams);
 
         res.render("index", {
             posts: rows,
@@ -44,54 +57,54 @@ const sql = `
             totalPages: Math.ceil(total / limit),
             currentPage: page,
             search,
+            category,
         });
+
     } catch (error) {
         console.log(error);
         res.status(500).send("목록 로드 오류");
     }
 });
 
-// 글쓰기 폼 (checkLogin 추가 -> 로그인 안하면 못 들어옴)
+// 2. 글쓰기 폼
 router.get('/new', checkLogin, (req, res) => {
     res.render("new");
 });
 
-// 글 저장 (작성자 ID 저장 추가) + 카테고리 추가(11.28)
-router.post('/:id/edit', checkLogin, async (req, res) => {
+// 3. 글 저장 (INSERT)
+router.post('/', checkLogin, async (req, res) => {
     try {
-        const id = req.params.id;
-        // 1. 여기서도 category를 받아옵니다.
         const { title, content, category } = req.body;
+        const author_id = req.session.user.id;
         const isAdmin = req.session.user.is_admin === 1;
 
-        // 2. [변경됨] 수정할 때도 공지사항 권한 체크
+        // 공지사항 권한 체크
         if (category === '공지' && !isAdmin) {
-            return res.send(`<script>alert('🛑 관리자만 공지사항을 선택할 수 있습니다.'); history.back();</script>`);
+            return res.send(`<script>alert('🛑 관리자만 공지사항을 작성할 수 있습니다.'); history.back();</script>`);
         }
 
-        // 3. DB 업데이트할 때 category도 같이 수정
+        // DB 저장 (INSERT)
         await pool.query(
-            `UPDATE posts SET title=?, content=?, category=? WHERE id=?`,
-            [title, content, category, id]
+            `INSERT INTO posts (title, content, author_id, category) VALUES (?, ?, ?, ?)`,
+            [title, content, author_id, category]
         );
 
-        res.redirect(`/posts/${id}`);
+        res.redirect('/posts');
 
     } catch (error) {
         console.error(error);
-        res.status(500).send("수정 오류");
+        res.status(500).send("글 작성 오류");
     }
 });
 
-// 상세 보기
+// 4. 상세 보기
 router.get('/:id', async (req, res) => {
     try {
         const id = req.params.id;
 
-        // 조회수 증가
         await pool.query(`UPDATE posts SET view_count = view_count + 1 WHERE id=?`, [id]);
 
-        // posts 테이블과 users 테이블을 합쳐서 작성자 이름(author_name)을 가져옴
+        // (1) 게시글 가져오기
         const [[post]] = await pool.query(
             `SELECT p.*, u.name AS author_name 
              FROM posts p 
@@ -102,31 +115,82 @@ router.get('/:id', async (req, res) => {
 
         if (!post) return res.status(404).send("게시글을 찾을 수 없습니다.");
 
-        res.render("show", { post });
+        // (2) 댓글 목록 가져오기 (작성자 이름 포함)
+        const [comments] = await pool.query(
+            `SELECT c.*, u.name AS commenter_name 
+             FROM comments c
+             JOIN users u ON c.user_id = u.id
+             WHERE c.post_id = ?
+             ORDER BY c.created_at DESC`, // 최신 댓글이 위로
+            [id]
+        );
+
+        // post와 comments를 둘 다 보냄
+        res.render("show", { post, comments });
 
     } catch (error) {
         res.status(500).send("상세 보기 오류");
     }
 });
 
-// 삭제 (본인 확인 추가)
+// 5. 수정 폼 (권한 체크 포함)
+router.get('/:id/edit', checkLogin, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const [[post]] = await pool.query(`SELECT * FROM posts WHERE id=?`, [id]);
+
+        // 작성자 본인 확인 (관리자는 통과)
+        if (post.author_id !== req.session.user.id && req.session.user.is_admin !== 1) {
+            return res.send(`<script>alert('작성자만 수정할 수 있습니다.'); history.back();</script>`);
+        }
+
+        res.render("edit", { post });
+    } catch (error) {
+        res.status(500).send("수정 페이지 오류");
+    }
+});
+
+// 6. 수정 저장 (UPDATE)
+router.post('/:id/edit', checkLogin, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { title, content, category } = req.body;
+        const isAdmin = req.session.user.is_admin === 1;
+
+        // 수정 시에도 공지사항 권한 체크
+        if (category === '공지' && !isAdmin) {
+            return res.send(`<script>alert('🛑 관리자만 공지사항을 선택할 수 있습니다.'); history.back();</script>`);
+        }
+
+        // DB 업데이트
+        await pool.query(
+            `UPDATE posts SET title=?, content=?, category=? WHERE id=?`,
+            [title, content, category, id]
+        );
+
+        res.redirect(`/posts/${id}`);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("수정 저장 오류");
+    }
+});
+
+// 7. 삭제
 router.post('/:id/delete', checkLogin, async (req, res) => {
     try {
         const id = req.params.id;
         const userId = req.session.user.id;
         const isAdmin = req.session.user.is_admin === 1;
 
-        // 먼저 게시글 정보를 가져와서 작성자가 누군지 확인
         const [[post]] = await pool.query(`SELECT * FROM posts WHERE id=?`, [id]);
 
         if (!post) return res.status(404).send("게시글이 없습니다.");
 
-        // 권한 체크 (작성자이거나 관리자만 통과)
         if (post.author_id !== userId && !isAdmin) {
             return res.send(`<script>alert('작성자만 삭제할 수 있습니다.'); history.back();</script>`);
         }
 
-        // 삭제 실행
         await pool.query(`DELETE FROM posts WHERE id=?`, [id]);
         res.redirect('/posts');
 
@@ -135,29 +199,46 @@ router.post('/:id/delete', checkLogin, async (req, res) => {
     }
 });
 
-// 수정 폼 (본인 확인 로직 필요 - 삭제와 비슷하게 구현 권장)
-router.get('/:id/edit', checkLogin, async (req, res) => {
+// 8. 댓글 작성
+router.post('/:id/comments', checkLogin, async (req, res) => {
     try {
-        const id = req.params.id;
-        const [[post]] = await pool.query(`SELECT * FROM posts WHERE id=?`, [id]);
-        
-        if (post.author_id !== req.session.user.id && req.session.user.is_admin !== 1) {
-             return res.send(`<script>alert('작성자만 수정할 수 있습니다.'); history.back();</script>`);
-        }
+        const postId = req.params.id;
+        const { content } = req.body;
+        const userId = req.session.user.id;
 
-        res.render("edit", { post });
+        await pool.query(
+            `INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)`,
+            [postId, userId, content]
+        );
+
+        res.redirect(`/posts/${postId}`); // 다시 해당 글로 이동
+
     } catch (error) {
-        res.status(500).send("오류");
+        console.error(error);
+        res.status(500).send("댓글 작성 오류");
     }
 });
 
-// 수정 저장
-router.post('/:id/edit', checkLogin, async (req, res) => {
-    // 여기도 삭제처럼 본인 확인 로직을 넣는 것이 안전하지만 생략함
-    const id = req.params.id;
-    const { title, content } = req.body;
-    await pool.query(`UPDATE posts SET title=?, content=? WHERE id=?`, [title, content, id]);
-    res.redirect(`/posts/${id}`);
+// 9. 댓글 삭제
+router.post('/:id/comments/:commentId/delete', checkLogin, async (req, res) => {
+    try {
+        const { id, commentId } = req.params;
+        const userId = req.session.user.id;
+        const isAdmin = req.session.user.is_admin === 1;
+
+        // 본인 확인
+        const [[comment]] = await pool.query('SELECT * FROM comments WHERE id=?', [commentId]);
+
+        if (comment.user_id !== userId && !isAdmin) {
+            return res.send(`<script>alert('작성자만 삭제 가능합니다.'); history.back();</script>`);
+        }
+
+        await pool.query('DELETE FROM comments WHERE id=?', [commentId]);
+        res.redirect(`/posts/${id}`);
+
+    } catch (error) {
+        res.status(500).send("댓글 삭제 오류");
+    }
 });
 
 module.exports = router;

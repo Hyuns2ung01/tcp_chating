@@ -3,144 +3,641 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>채팅방 목록</title>
-    <link rel="stylesheet" href="/style.css">
+    <title>채팅</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            width: 600px;
-            margin: 40px auto;
-            font-family: 'Apple SD Gothic Neo', sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             background-color: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        .list-container {
-            background: white;
+        .main-container {
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* [왼쪽] 사이드바 */
+        .sidebar {
+            width: 350px;
+            background: #fff;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #f5f5f5;
         }
 
-        h2 {
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-            margin-top: 0;
+        .sidebar-header h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+            color: #333;
         }
 
-        /* 방 만들기 폼 */
         .create-form {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
         }
 
         .create-form input {
             flex: 1;
-            padding: 12px;
+            padding: 10px 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 8px;
             outline: none;
+            background: #f9f9f9;
         }
 
         .create-form button {
-            padding: 10px 20px;
+            width: 40px;
             background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-size: 1.1em;
         }
 
-        .create-form button:hover {
-            background-color: #43a047;
-        }
-
-        /* 방 목록 리스트 */
         .room-list {
+            flex: 1;
+            overflow-y: auto;
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        /* [수정됨] 리스트 아이템 스타일 */
         .room-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f9f9f9;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .room-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .room-item.active {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .room-icon {
+            width: 48px;
+            height: 48px;
+            background: #eee;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+            font-size: 1.4em;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .room-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .room-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 15px;
-            border-bottom: 1px solid #eee;
-            transition: all 0.2s;
-
-            /* 마우스 올렸을 때 클릭 가능한 느낌 주기 */
-            cursor: pointer;
-            /* 더블클릭 할 때 글자가 드래그 선택되는 것 방지 */
-            user-select: none;
         }
 
-        /* 마우스 올렸을 때 배경색 변경 */
-        .room-item:hover {
-            background-color: #e8f5e9;
-            /* 연한 초록색 */
-            transform: translateX(5px);
-            /* 살짝 오른쪽으로 이동 효과 */
-        }
-
-        .room-link {
-            text-decoration: none;
-            color: #333;
+        .room-title {
             font-weight: bold;
-            font-size: 1.1em;
-            flex: 1;
+            font-size: 1em;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* 안내 문구 스타일 */
-        .hint-text {
-            font-size: 0.8em;
+        .room-time {
+            font-size: 0.75em;
+            color: #aaa;
+            margin-left: 5px;
+            flex-shrink: 0;
+        }
+
+        .room-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-desc {
+            font-size: 0.85em;
             color: #888;
-            margin-left: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
         }
 
-        .back-link {
+        .unread-badge {
+            background-color: #ff3b30;
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid #f5f5f5;
+            text-align: center;
+        }
+
+        .sidebar-footer a {
             text-decoration: none;
             color: #666;
+            font-size: 0.9em;
+            font-weight: bold;
         }
 
-        .back-link:hover {
-            color: #333;
+        /* [오른쪽] 채팅 영역 */
+        .chat-area {
+            flex: 1;
+            background: #b2c7d9;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .empty-state {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8f9fa;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 5em;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-title {
             font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* 메시지 목록 */
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            list-style: none;
+            margin: 0;
+        }
+
+        #messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        /* [핵심] 메시지 레이아웃 수정 */
+        .msg-line {
+            margin-bottom: 10px;
+            clear: both;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 메시지 내용 + 시간 컨테이너 */
+        .msg-content-wrapper {
+            display: flex;
+            align-items: flex-end;
+            /* 시간 아래쪽 정렬 */
+            gap: 5px;
+            /* 말풍선과 시간 사이 간격 */
+            max-width: 80%;
+        }
+
+        /* 말풍선 */
+        .msg-box {
+            padding: 10px 14px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            font-size: 0.95em;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            line-height: 1.4;
+        }
+
+        /* 시간 텍스트 */
+        .msg-timestamp {
+            font-size: 0.7em;
+            color: #999;
+            /* 연한 회색 */
+            min-width: fit-content;
+            /* 내용만큼만 공간 차지 */
+            margin-bottom: 2px;
+        }
+
+        /* 내 메시지 (오른쪽 정렬) */
+        .my-msg {
+            align-items: flex-end;
+        }
+
+        .my-msg .msg-content-wrapper {
+            flex-direction: row-reverse;
+            /* ★ 핵심: [시간] [말풍선] 순서로 뒤집기 */
+        }
+
+        .my-msg .msg-box {
+            background: #fee500;
+            text-align: left;
+            border-top-right-radius: 2px;
+        }
+
+        .my-msg .msg-timestamp {
+            text-align: right;
+        }
+
+        /* 상대방 메시지 (왼쪽 정렬) */
+        .other-msg {
+            align-items: flex-start;
+        }
+
+        .other-msg .msg-content-wrapper {
+            flex-direction: row;
+            /* 기본: [말풍선] [시간] 순서 */
+        }
+
+        .other-msg .msg-box {
+            background: #fff;
+            border-top-left-radius: 2px;
+        }
+
+        .other-msg .msg-sender {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+            margin-left: 2px;
+        }
+
+        /* 내 메시지 (오른쪽 정렬) */
+        .my-msg {
+            align-items: flex-end;
+        }
+
+        .my-msg .msg-content-wrapper {
+            flex-direction: row-reverse;
+        }
+
+        /* 시간-말풍선 순서 뒤집기 */
+        .my-msg .msg-box {
+            background: #fee500;
+            text-align: left;
+            border-top-right-radius: 2px;
+        }
+
+        .my-msg .msg-timestamp {
+            text-align: right;
+        }
+
+        /* 상대방 메시지 (왼쪽 정렬) */
+        .other-msg {
+            align-items: flex-start;
+        }
+
+        .other-msg .msg-content-wrapper {
+            flex-direction: row;
+        }
+
+        .other-msg .msg-box {
+            background: #fff;
+            border-top-left-radius: 2px;
+        }
+
+        .other-msg .msg-sender {
+            font-size: 0.8em;
+            color: #555;
+            margin-bottom: 5px;
+            margin-left: 2px;
+        }
+
+        /* 입력창 */
+        .input-area {
+            background: #fff;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            background: #f8f9fa;
+            font-size: 0.95em;
+        }
+
+        .send-btn {
+            background: #fee500;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
 
 <body>
-    <div class="list-container">
-        <h2>💬 채팅방 대기실</h2>
 
-        <form action="/chat/create" method="POST" class="create-form">
-            <input type="text" name="title" placeholder="새로운 채팅방 제목..." required autocomplete="off">
-            <button type="submit">+ 방 만들기</button>
-        </form>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>채팅방</h2>
+                <form onsubmit="createRoom(event)" class="create-form">
+                    <input type="text" id="new-room-title" placeholder="방 만들기..." required autocomplete="off">
+                    <button type="submit"><i class="fa-solid fa-plus"></i></button>
+                </form>
+            </div>
 
-        <ul class="room-list">
-            <% if (rooms.length===0) { %>
-                <li style="text-align: center; padding: 40px; color: #888;">
-                    개설된 채팅방이 없습니다.<br>새로운 방을 만들어보세요!
-                </li>
-                <% } else { %>
-                    <% rooms.forEach(room=> { %>
-                        <li class="room-item" ondblclick="window.location.href='/chat/<%= room.id %>'"
-                            title="더블클릭하여 입장하기">
+            <ul class="room-list">
+                <% rooms.forEach(room=> { %>
+                    <li class="room-item" id="room-<%= room.id %>" onclick="joinRoom('<%= room.id %>')">
+                        <div class="room-icon"><i class="fa-solid fa-comments"></i></div>
+                        <div class="room-info">
+                            <div class="room-top">
+                                <span class="room-title">
+                                    <%= room.title %>
+                                </span>
+                                <span class="room-time">
+                                    <%= room.display_time %>
+                                </span>
+                            </div>
+                            <div class="room-bottom">
+                                <span class="room-desc">
+                                    <%= room.last_message || '대화 내용 없음' %>
+                                </span>
+                                <% if (room.unread_count> 0) { %>
+                                    <span class="unread-badge" id="badge-<%= room.id %>">
+                                        <%= room.unread_count %>
+                                    </span>
+                                    <% } else { %>
+                                        <span class="unread-badge" id="badge-<%= room.id %>"
+                                            style="display:none;">0</span>
+                                        <% } %>
+                            </div>
+                        </div>
+                    </li>
+                    <% }) %>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="/posts"><i class="fa-solid fa-house"></i> 홈으로 돌아가기</a>
+            </div>
+        </div>
 
-                            <span class="room-link">📢 <%= room.title %></span>
-                        </li>
-                        <% }) %>
-                            <% } %>
-        </ul>
+        <div class="chat-area">
+            <div id="empty-state" class="empty-state">
+                <i class="fa-regular fa-comments"></i>
+                <h3>채팅방을 선택해주세요</h3>
+            </div>
 
-        <div style="margin-top: 25px; text-align: right;">
-            <a href="/posts" class="back-link">🏠 홈으로 돌아가기</a>
+            <div id="chat-content" style="display: none; height: 100%; flex-direction: column;">
+                <div class="chat-header">
+                    <span class="chat-title" id="current-room-title">방 제목</span>
+                    <button onclick="inviteUser()"
+                        style="border:none; background:none; cursor:pointer; font-weight:bold; color:#2196F3;">
+                        <i class="fa-solid fa-user-plus"></i> 초대
+                    </button>
+                </div>
+
+                <ul id="messages"></ul>
+
+                <form id="chat-form" class="input-area">
+                    <input id="input" autocomplete="off" placeholder="메시지 입력..." />
+                    <button class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
         </div>
     </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const myId = parseInt("<%= user.id %>");
+        const myName = "<%= user.name %>";
+        let currentRoomId = null;
+
+        // 시간 포맷 함수 (오후 2:30 형태)
+        function formatTime(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function joinRoom(roomId) {
+            if (currentRoomId === roomId) return;
+
+            if (currentRoomId) {
+                socket.emit('leave room', { roomId: currentRoomId, name: myName });
+                document.getElementById(`room-${currentRoomId}`).classList.remove('active');
+            }
+
+            currentRoomId = roomId;
+
+            document.getElementById(`room-${roomId}`).classList.add('active');
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('chat-content').style.display = 'flex';
+
+            const badge = document.getElementById(`badge-${roomId}`);
+            if (badge) badge.style.display = 'none';
+            fetch(`/chat/api/read/${roomId}`, { method: 'POST' });
+
+            const response = await fetch(`/chat/api/${roomId}`);
+            const data = await response.json();
+
+            document.getElementById('current-room-title').innerText = data.room.title;
+            const msgList = document.getElementById('messages');
+            msgList.innerHTML = '';
+
+            // 과거 메시지 로드
+            data.messages.forEach(msg => {
+                // DB 시간(created_at)을 그대로 사용
+                addMessageToScreen(msg.name, msg.content, msg.user_id === myId, msg.created_at);
+            });
+
+            socket.emit('join room', { roomId: roomId, name: myName });
+            scrollToBottom();
+        }
+
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('input');
+            if (input.value.trim() && currentRoomId) {
+                socket.emit('chat message', {
+                    roomId: currentRoomId,
+                    name: myName,
+                    text: input.value,
+                    userId: myId
+                });
+                input.value = '';
+                input.focus();
+            }
+        });
+
+        socket.on('chat message', (data) => {
+            if (String(data.roomId) === String(currentRoomId)) {
+                // 실시간 메시지는 data.time을 쓰거나, 없으면 현재 시간 사용
+                const time = data.time || new Date();
+                addMessageToScreen(data.name, data.text, data.user_id === myId, time);
+                scrollToBottom();
+            }
+        });
+
+        async function createRoom(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-room-title');
+            const title = input.value;
+            if (!title) return;
+
+            const res = await fetch('/chat/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            });
+            const data = await res.json();
+            if (data.success) {
+                input.value = '';
+                joinRoom(data.roomId);
+            }
+        }
+
+        socket.on('new_room', (room) => {
+            const ul = document.querySelector('.room-list');
+            const li = document.createElement('li');
+            li.className = 'room-item';
+            li.id = `room-${room.id}`;
+            li.setAttribute('onclick', `joinRoom('${room.id}')`);
+
+            li.innerHTML = `
+            <div class="room-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="room-info">
+                <div class="room-top">
+                    <span class="room-title">${room.title}</span>
+                    <span class="room-time">방금</span>
+                </div>
+                <div class="room-bottom">
+                    <span class="room-desc">새로운 대화방</span>
+                    <span class="unread-badge" id="badge-${room.id}" style="display:none;">0</span>
+                </div>
+            </div>
+        `;
+            ul.prepend(li);
+        });
+
+        // [수정됨] 화면에 그리는 함수 (시간 추가)
+        function addMessageToScreen(name, text, isMe, time) {
+            const ul = document.getElementById('messages');
+            const li = document.createElement('li');
+            li.className = 'msg-line ' + (isMe ? 'my-msg' : 'other-msg');
+
+            const timeStr = formatTime(time);
+
+            // HTML 구조 통일: [말풍선] 다음에 [시간]을 넣음
+            // CSS에서 .my-msg는 flex-direction: row-reverse로 인해 [시간][말풍선]으로 보임
+            li.innerHTML = `
+            ${!isMe ? `<div class="msg-sender">${name}</div>` : ''}
+            <div class="msg-content-wrapper">
+                <div class="msg-box">${text}</div>
+                <div class="msg-timestamp">${timeStr}</div>
+            </div>
+        `;
+            ul.appendChild(li);
+        }
+
+        function scrollToBottom() {
+            const ul = document.getElementById('messages');
+            ul.scrollTop = ul.scrollHeight;
+        }
+
+        function inviteUser() {
+            const targetUser = prompt("초대할 유저 아이디를 입력하세요:");
+            if (targetUser && currentRoomId) {
+                fetch(`/chat/${currentRoomId}/invite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetUsername: targetUser })
+                })
+                    .then(res => {
+                        if (res.ok || res.status === 200) alert("초대 요청을 보냈습니다.");
+                        else alert("초대 실패 (아이디 확인)");
+                    });
+            }
+        }
+    </script>
+
 </body>
 
 </html>

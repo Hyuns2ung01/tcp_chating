@@ -6,82 +6,192 @@
     <title>
         <%= room.title %>
     </title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 전체 폰트 및 배경 설정 */
         body {
-            background-color: #b2c7d9;
+            background-color: #f0f2f5;
+            /* 부드러운 회색 배경 */
             margin: 0;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
+        /* 채팅창 컨테이너 메인 박스 */
         .chat-container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: #b2c7d9;
-            height: 100vh;
+            width: 100%;
+            max-width: 450px;
+            /* 모바일 느낌의 폭 */
+            height: 90vh;
+            /* 화면에 꽉 차지 않고 여백 유지 */
+            background: #fff;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            /* 부드러운 그림자 */
+            border-radius: 18px;
+            /* 둥근 모서리 */
+            overflow: hidden;
         }
 
-        .chat-header {
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
+        /* ========== 상단 헤더 영역 ========== */
+        .header-container {
+            background: #fff;
+            border-bottom: 1px solid #f1f1f1;
+            padding: 15px 20px;
+            z-index: 10;
+        }
+
+        /* 방 제목과 나가기 버튼 */
+        .chat-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
         }
 
-        .chat-header h2 {
+        .chat-top h2 {
             margin: 0;
-            font-size: 1.2em;
+            font-size: 1.15em;
             color: #333;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* 긴 제목은 ... 처리 */
+            max-width: 75%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .chat-header a {
+        #exit-btn {
             text-decoration: none;
-            color: #333;
-            background: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8em;
+            color: #666;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            background-color: #f7f7f7;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
         }
 
+        #exit-btn:hover {
+            background-color: #eee;
+            color: #333;
+        }
+
+        /* 초대 바 스타일 */
+        .invite-bar form {
+            display: flex;
+            gap: 8px;
+            background-color: #f8f9fa;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .invite-bar input {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.95em;
+        }
+
+        .invite-bar button {
+            background-color: #4a90e2;
+            /* 세련된 파란색 */
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .invite-bar button:hover {
+            background-color: #357abd;
+        }
+
+        /* ========== 메시지 영역 ========== */
         #messages {
             list-style-type: none;
             margin: 0;
             padding: 20px;
             flex: 1;
-            overflow-y: scroll;
+            overflow-y: auto;
+            /* 스크롤바 생김 */
+            background-color: #b2c7d9;
+            /* 카톡 스타일 배경색 */
+        }
+
+        /* 스크롤바 숨기기 (크롬, 사파리) */
+        #messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
         }
 
         #messages li {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             clear: both;
         }
 
+        /* 말풍선 공통 스타일 */
         .msg-box {
             display: inline-block;
-            padding: 8px 12px;
-            border-radius: 10px;
+            padding: 10px 14px;
+            border-radius: 16px;
             max-width: 70%;
             word-wrap: break-word;
+            font-size: 0.95em;
+            line-height: 1.4;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
         }
 
         .msg-info {
-            font-size: 0.8em;
-            color: #555;
+            font-size: 0.75em;
+            color: #666;
             margin-bottom: 4px;
+            margin-left: 4px;
         }
 
+        /* 내 메시지 (오른쪽) */
         .my-msg {
             text-align: right;
         }
 
-        .my-msg .msg-box {
-            background: #ffeb33;
-            float: right;
-            text-align: left;
+        .my-msg .msg-info {
+            margin-right: 4px;
         }
 
+        .my-msg .msg-box {
+            background: #fee500;
+            /* 카톡 노란색 */
+            color: #333;
+            float: right;
+            text-align: left;
+            border-top-right-radius: 2px;
+            /* 말풍선 꼬리 */
+        }
+
+        /* 상대방 메시지 (왼쪽) */
         .other-msg {
             text-align: left;
         }
@@ -89,48 +199,101 @@
         .other-msg .msg-box {
             background: #ffffff;
             float: left;
+            border-top-left-radius: 2px;
+            /* 말풍선 꼬리 */
         }
 
+        /* 시스템 메시지 (입퇴장 알림) */
+        .system-msg {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .system-msg span {
+            background-color: rgba(0, 0, 0, 0.15);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+
+        /* ========== 입력 영역 ========== */
         .input-area {
-            padding: 10px;
+            padding: 15px;
             background: #fff;
             display: flex;
+            align-items: center;
+            border-top: 1px solid #f1f1f1;
+            gap: 10px;
         }
 
-        .input-area input {
+        .input-container {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            background-color: #f0f2f5;
+            border-radius: 24px;
+            padding: 2px 15px;
+            display: flex;
+            align-items: center;
         }
 
-        .input-area button {
-            padding: 10px 20px;
-            background: #ffeb33;
+        #input {
+            flex: 1;
+            padding: 12px 0;
             border: none;
-            border-radius: 4px;
-            margin-left: 10px;
+            background: transparent;
+            outline: none;
+            font-size: 1em;
+        }
+
+        /* 전송 버튼 (아이콘형) */
+        .send-btn {
+            background-color: #fee500;
+            color: #333;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            /* 원형 */
             cursor: pointer;
-            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em;
+            transition: 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .send-btn:hover {
+            background-color: #fdd835;
+            transform: scale(1.05);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
 
 <body>
     <div class="chat-container">
-        <div class="chat-header">
-            <div class="invite-bar"
-                style="background: white; padding: 10px; display: flex; gap: 5px; border-bottom: 1px solid #ddd;">
-                <form action="/chat/<%= room.id %>/invite" method="POST" style="width: 100%; display: flex; gap: 5px;">
-                    <input type="text" name="targetUsername" placeholder="초대할 유저 아이디 입력" required
-                        style="flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
-                    <button type="submit"
-                        style="background-color: #2196F3; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">초대</button>
+
+        <div class="header-container">
+            <div class="chat-top">
+                <h2><i class="fa-regular fa-comments"></i>
+                    <%= room.title %>
+                </h2>
+                <a href="#" id="exit-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> 나가기
+                </a>
+            </div>
+
+            <div class="invite-bar">
+                <form action="/chat/<%= room.id %>/invite" method="POST">
+                    <input type="text" name="targetUsername" placeholder="초대할 친구 아이디..." required autocomplete="off">
+                    <button type="submit"><i class="fa-solid fa-user-plus"></i> 초대</button>
                 </form>
             </div>
-            <h2>💬 <%= room.title %>
-            </h2>
-            <a href="/chat">나가기</a>
         </div>
 
         <ul id="messages">
@@ -147,8 +310,12 @@
         </ul>
 
         <form id="form" class="input-area">
-            <input id="input" autocomplete="off" placeholder="메시지 입력..." />
-            <button>전송</button>
+            <div class="input-container">
+                <input id="input" autocomplete="off" placeholder="메시지 입력..." />
+            </div>
+            <button class="send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
         </form>
     </div>
 
@@ -156,25 +323,30 @@
     <script>
         var socket = io();
 
-        // 현재 방 번호와 내 정보
         var roomId = "<%= room.id %>";
         var myName = "<%= user.name %>";
         var myId = parseInt("<%= user.id %>");
 
-        // ★ 서버에 "나 이 방에 들어왔어"라고 알림
-        socket.emit('join room', roomId);
+        socket.emit('join room', { roomId: roomId, name: myName });
 
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
+        var exitBtn = document.getElementById('exit-btn');
 
-        // 스크롤을 맨 아래로 내리기
         window.scrollTo(0, document.body.scrollHeight);
+
+        exitBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (confirm('정말 이 채팅방을 나가시겠습니까?')) {
+                socket.emit('leave room', { roomId: roomId, name: myName });
+                window.location.href = '/chat';
+            }
+        });
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            if (input.value) {
-                // 서버로 보낼 때 방 번호(roomId)도 같이 보냄
+            if (input.value.trim()) {
                 socket.emit('chat message', {
                     roomId: roomId,
                     name: myName,
@@ -182,12 +354,13 @@
                     userId: myId
                 });
                 input.value = '';
+                input.focus();
             }
         });
 
         socket.on('chat message', function (data) {
             var item = document.createElement('li');
-            var isMe = data.name === myName;
+            var isMe = data.userId === myId;
 
             item.className = isMe ? 'my-msg' : 'other-msg';
             item.innerHTML = `
@@ -196,7 +369,16 @@
             `;
 
             messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
+            messages.scrollTo(0, messages.scrollHeight);
+        });
+
+        socket.on('system message', function (data) {
+            var item = document.createElement('li');
+            item.className = 'system-msg';
+            item.innerHTML = `<span>${data.text}</span>`;
+
+            messages.appendChild(item);
+            messages.scrollTo(0, messages.scrollHeight);
         });
     </script>
 </body>

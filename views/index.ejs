@@ -2,95 +2,277 @@
 <html lang="ko">
 
 <head>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <title>게시글 목록</title>
     <style>
+        /* 기본 설정 */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            width: 800px;
-            margin: auto;
-            font-family: 'Apple SD Gothic Neo', sans-serif;
+            width: 900px;
+            margin: 40px auto;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
         }
 
         h1 {
-            margin-top: 20px;
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #333;
         }
 
-        /* 상단 바 레이아웃 */
-        .top-bar {
+        /* 링크 기본 스타일 제거 */
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ==============================
+           1. 카테고리 탭 (상단)
+           ============================== */
+        .category-tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 15px 0;
+            gap: 10px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid #eee;
         }
 
-        .post {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
+        .category-tabs a {
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.95em;
+            font-weight: bold;
+            background-color: #e9ecef;
+            color: #555;
+            transition: all 0.2s;
         }
 
-        .no-result {
-            text-align: center;
-            padding: 50px 0;
-            color: #666;
-            font-size: 1.2em;
+        .category-tabs a:hover {
+            background-color: #dee2e6;
+            transform: translateY(-2px);
         }
 
-        .auth-box a {
-            margin-right: 10px;
-            text-decoration: none;
+        .category-tabs a.active-tab {
+            background-color: #333;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ==============================
+           2. 메인 컨트롤 바 (유저정보 + 검색 + 글쓰기)
+           ============================== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            /* 양끝 정렬 */
+            align-items: center;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 왼쪽: 유저 정보 그룹 */
+        .user-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95em;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 1.1em;
             color: #333;
+        }
+
+        .btn-text {
+            color: #666;
+            font-size: 0.9em;
+            transition: color 0.2s;
+        }
+
+        .btn-text:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+
+        .admin-link {
+            color: #d32f2f;
+            font-weight: bold;
             font-size: 0.9em;
         }
 
-        .admin-tag {
-            color: red;
+        /* 채팅 버튼 스타일 */
+        .btn-chat {
+            background-color: #fee500;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 8px;
             font-weight: bold;
-            margin-left: 5px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        /* 카테고리 뱃지 스타일 */
-        .badge-cat {
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-right: 8px;
+        .btn-chat:hover {
+            background-color: #fdd835;
+        }
+
+        /* 오른쪽: 검색 + 글쓰기 그룹 */
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 검색창 스타일 */
+        .search-form {
+            display: flex;
+            align-items: center;
+            background: #f1f3f5;
+            border-radius: 8px;
+            padding: 5px 10px;
+        }
+
+        .search-form input {
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 8px;
+            font-size: 0.95em;
+            width: 200px;
+        }
+
+        .search-form button {
+            background: #2196F3;
             color: white;
-            background-color: #999;
-            display: inline-block;
-            vertical-align: middle;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-form button:hover {
+            background-color: #1e88e5;
+        }
+
+        /* [핵심] 글쓰기 버튼 스타일 */
+        .btn-write {
+            background-color: #4CAF50;
+            /* 초록색 */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(76, 175, 80, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-write:hover {
+            background-color: #43a047;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        /* ==============================
+           3. 게시글 목록 리스트
+           ============================== */
+        .post-list {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .post {
+            padding: 20px;
+            border-bottom: 1px solid #f1f1f1;
+            transition: background 0.1s;
+        }
+
+        .post:hover {
+            background-color: #fafafa;
+        }
+
+        .post:last-child {
+            border-bottom: none;
+        }
+
+        .post-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .badge-cat {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-right: 10px;
+            color: white;
         }
 
         .cat-used {
             background-color: #FF9800;
         }
 
-        /* 주황색 (중고) */
         .cat-buy {
             background-color: #2196F3;
         }
 
-        /* 파란색 (공구) */
         .cat-hi {
             background-color: #4CAF50;
         }
 
-        /* 초록색 (인사) */
         .cat-notice {
             background-color: #D32F2F;
         }
 
-        /* 빨간색 (공지) */
         .cat-free {
             background-color: #9E9E9E;
         }
 
-        /* 회색 (자유) */
+        .post-meta {
+            font-size: 0.85em;
+            color: #888;
+            display: flex;
+            gap: 15px;
+        }
 
-        /* 페이지네이션 스타일 */
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .no-result {
+            text-align: center;
+            padding: 60px 0;
+            color: #999;
+        }
+
+        /* 페이지네이션 */
         .pagination {
             margin-top: 30px;
             text-align: center;
@@ -99,93 +281,114 @@
 
         .pagination a {
             display: inline-block;
-            min-width: 30px;
-            height: 30px;
-            line-height: 30px;
-            margin: 0 3px;
-            padding: 0 5px;
-            text-decoration: none;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            color: #333;
-            background-color: white;
-            cursor: pointer;
+            min-width: 35px;
+            height: 35px;
+            line-height: 35px;
+            margin: 0 4px;
+            border-radius: 8px;
+            background: white;
+            color: #555;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             transition: all 0.2s;
         }
 
         .pagination a:hover {
             background-color: #f1f1f1;
+            transform: translateY(-2px);
         }
 
         .pagination .active {
-            background-color: #007bff;
+            background-color: #333;
             color: white;
-            border-color: #007bff;
             pointer-events: none;
         }
     </style>
 </head>
 
 <body>
+
     <h1>📋 게시글 목록</h1>
 
+    <div class="category-tabs">
+        <a href="/posts?category=all&search=<%= search %>"
+            class="<%= category === 'all' ? 'active-tab' : '' %>">전체보기</a>
+        <a href="/posts?category=자유&search=<%= search %>" class="<%= category === '자유' ? 'active-tab' : '' %>">자유게시판</a>
+        <a href="/posts?category=중고거래&search=<%= search %>" class="<%= category === '중고거래' ? 'active-tab' : '' %>">📦
+            중고거래</a>
+        <a href="/posts?category=공구&search=<%= search %>" class="<%= category === '공구' ? 'active-tab' : '' %>">🛒 공구</a>
+        <a href="/posts?category=가입인사&search=<%= search %>" class="<%= category === '가입인사' ? 'active-tab' : '' %>">👋
+            가입인사</a>
+        <a href="/posts?category=공지&search=<%= search %>" class="<%= category === '공지' ? 'active-tab' : '' %>">📢 공지</a>
+    </div>
+
     <div class="top-bar">
-        <div class="auth-box">
+        <div class="user-group">
             <% if (user) { %>
-                <span>👋 <strong>
-                        <%= user.name %>
-                    </strong>님</span>
-                <a href="/logout" style="color: blue; margin-left: 10px;">로그아웃</a>
+                <span class="user-name">👋 <%= user.name %>님</span>
+                <a href="/logout" class="btn-text">로그아웃</a>
 
                 <% if (user.is_admin) { %>
-                    <a href="/admin" class="admin-tag">[관리자 페이지]</a>
+                    <a href="/admin" class="admin-link">[관리자 페이지]</a>
                     <% } %>
-                        <a href="/chat" style="margin-left: 10px; text-decoration: none;">💬 채팅방</a>
-
+                        <a href="/chat" class="btn-chat"><i class="fa-solid fa-comments"></i> 채팅방</a>
                         <% } else { %>
-                            <a href="/login">로그인</a>
-                            <a href="/register">회원가입</a>
+                            <a href="/login" class="btn-text" style="font-weight:bold; color:#2196F3;">로그인</a>
+                            <span style="color:#ddd;">|</span>
+                            <a href="/register" class="btn-text">회원가입</a>
                             <% } %>
         </div>
 
-        <form method="GET" action="/posts" style="display:inline-block;">
-            <input type="text" name="search" value="<%= search %>" placeholder="검색어 입력" />
-            <button type="submit">검색</button>
-        </form>
+        <div class="action-group">
+            <form method="GET" action="/posts" class="search-form">
+                <input type="hidden" name="category" value="<%= category %>">
+                <input type="text" name="search" value="<%= search %>" placeholder="검색어 입력..." />
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
 
-        <a href="/posts/new">✏ 글쓰기</a>
+            <a href="/posts/new" class="btn-write">
+                <i class="fa-solid fa-pen"></i> 글쓰기
+            </a>
+        </div>
     </div>
 
-    <div>
+    <div class="post-list">
         <% if (posts.length===0) { %>
             <div class="no-result">
+                <i class="fa-regular fa-folder-open" style="font-size: 3em; margin-bottom: 10px;"></i><br>
                 게시물이 존재하지 않습니다.
             </div>
             <% } else { %>
                 <% posts.forEach(post=> { %>
                     <div class="post">
-                        <a href="/posts/<%= post.id %>"
-                            style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                        <div class="post-main">
+                            <a href="/posts/<%= post.id %>" class="post-title">
+                                <% let badgeClass='cat-free' ; if (post.category==='중고거래' ) badgeClass='cat-used' ; else
+                                    if (post.category==='공구' ) badgeClass='cat-buy' ; else if (post.category==='가입인사' )
+                                    badgeClass='cat-hi' ; else if (post.category==='공지' ) badgeClass='cat-notice' ; %>
+                                    <span class="badge-cat <%= badgeClass %>">
+                                        <%= post.category || '자유' %>
+                                    </span>
 
-                            <% let badgeClass='cat-free' ; if (post.category==='중고거래' ) badgeClass='cat-used' ; else if
-                                (post.category==='공구' ) badgeClass='cat-buy' ; else if (post.category==='가입인사' )
-                                badgeClass='cat-hi' ; else if (post.category==='공지' ) badgeClass='cat-notice' ; %>
-                                <span class="badge-cat <%= badgeClass %>">
-                                    <%= post.category || '자유' %>
-                                </span>
-
-                                <% if (post.title.startsWith('[공지]')) { %>
-                                    <strong style="color: red;">📢 <%= post.title %></strong>
-                                    <% } else { %>
-                                        <strong>
+                                    <% if (post.title.startsWith('[공지]')) { %>
+                                        <span style="color: #D32F2F;">
                                             <%= post.title %>
-                                        </strong>
-                                        <% } %>
-                        </a>
+                                        </span>
+                                        <% } else { %>
+                                            <span>
+                                                <%= post.title %>
+                                            </span>
+                                            <% } %>
+                            </a>
+                        </div>
 
-                        <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                            <span>작성자: <%= post.author_name || '탈퇴한 유저' %></span> |
-                            <span>조회수: <%= post.view_count %></span>
+                        <div class="post-meta">
+                            <div class="meta-item"><i class="fa-solid fa-user"></i>
+                                <%= post.author_name || '탈퇴한 유저' %>
+                            </div>
+                            <div class="meta-item"><i class="fa-solid fa-eye"></i>
+                                <%= post.view_count %>
+                            </div>
                         </div>
                     </div>
                     <% }) %>
@@ -198,7 +401,8 @@
             startPage=Math.max(1, endPage - maxPageBtn + 1); } %>
 
             <% if (currentPage> 1) { %>
-                <a href="/posts?page=<%= currentPage - 1 %>&search=<%= search %>">&lt;</a>
+                <a href="/posts?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>"><i
+                        class="fa-solid fa-chevron-left"></i></a>
                 <% } %>
 
                     <% for (let i=startPage; i <=endPage; i++) { %>
@@ -207,14 +411,16 @@
                                 <%= i %>
                             </a>
                             <% } else { %>
-                                <a href="/posts?page=<%= i %>&search=<%= search %>">
+                                <a href="/posts?page=<%= i %>&search=<%= search %>&category=<%= category %>">
                                     <%= i %>
                                 </a>
                                 <% } %>
                                     <% } %>
 
                                         <% if (currentPage < totalPages) { %>
-                                            <a href="/posts?page=<%= currentPage + 1 %>&search=<%= search %>">&gt;</a>
+                                            <a
+                                                href="/posts?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>"><i
+                                                    class="fa-solid fa-chevron-right"></i></a>
                                             <% } %>
     </div>
 

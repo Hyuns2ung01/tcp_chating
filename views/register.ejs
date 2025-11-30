@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입</title>
-    <link rel="stylesheet" href="/style.css"> 
+    <link rel="stylesheet" href="/style.css">
     <style>
         /* 화면 전체를 꽉 채우고 중앙 정렬 */
         body {
@@ -13,9 +14,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* 화면 전체 높이 */
+            height: 100vh;
+            /* 화면 전체 높이 */
             margin: 0;
-            overflow: hidden; /* 불필요한 스크롤 방지 */
+            overflow: hidden;
+            /* 불필요한 스크롤 방지 */
         }
 
         /* 흰색 카드 박스 디자인 */
@@ -25,7 +28,8 @@
             border-radius: 15px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 400px; /* 너무 넓어지지 않게 제한 */
+            max-width: 400px;
+            /* 너무 넓어지지 않게 제한 */
             text-align: center;
         }
 
@@ -53,7 +57,8 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 0.95em;
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+            box-sizing: border-box;
+            /* 패딩이 너비에 포함되도록 설정 */
             transition: all 0.3s ease;
             background-color: #f9f9f9;
         }
@@ -100,11 +105,12 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="register-container">
         <h2>📝 회원가입</h2>
-        
+
         <form action="/register" method="POST">
             <div class="form-group">
                 <input type="text" name="name" placeholder="이름 (실명)" required autocomplete="off">
@@ -121,7 +127,7 @@
             <div class="form-group">
                 <input type="password" name="confirm_password" placeholder="비밀번호 확인" required>
             </div>
-            
+
             <button type="submit" class="btn-submit">가입하기</button>
         </form>
 
@@ -129,4 +135,5 @@
     </div>
 
 </body>
+
 </html>

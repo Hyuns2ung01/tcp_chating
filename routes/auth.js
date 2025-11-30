@@ -21,11 +21,11 @@ router.post('/register', async (req, res) => {
 
         // 3. 비밀번호 암호화 (해싱)
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // 4. DB에 저장 (이름, 이메일, 아이디, 암호화된 비번)
         // 주의: DB에 name, email 컬럼이 추가되어 있어야 합니다.
         await pool.query(
-            'INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)', 
+            'INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)',
             [name, email, username, hashedPassword]
         );
 
@@ -52,13 +52,13 @@ router.post('/login', async (req, res) => {
 
         if (user && await bcrypt.compare(password, user.password)) {
             // 로그인 성공: 세션에 유저 정보 저장
-            req.session.user = { 
-                id: user.id, 
-                username: user.username, 
+            req.session.user = {
+                id: user.id,
+                username: user.username,
                 name: user.name,
-                is_admin: user.is_admin 
+                is_admin: user.is_admin
             };
-            
+
             req.session.save(() => {
                 res.redirect('/posts');
             });
@@ -78,28 +78,44 @@ router.get('/logout', (req, res) => {
     });
 });
 
-// ==========================================
-// [관리자] 1. 관리자 페이지 (사용자 목록 조회)
-// ==========================================
+
+// 1. 관리자 페이지 (검색 + 정렬)
 router.get('/admin', async (req, res) => {
-    // 관리자 권한 체크
     if (!req.session.user || req.session.user.is_admin !== 1) {
         return res.send(`<script>alert('관리자만 접근 가능합니다.'); location.href='/posts';</script>`);
     }
 
     try {
-        // 모든 사용자 정보 가져오기 (비밀번호 제외)
-        const [users] = await pool.query('SELECT id, name, username, email, is_admin, created_at FROM users ORDER BY id DESC');
-        
-        res.render('admin', { users }); // users 데이터를 admin.ejs로 보냄
+        const sort = req.query.sort || 'date';
+        const order = req.query.order || 'desc';
+        const search = req.query.search || '';
+
+        const sortMap = { 'id': 'id', 'name': 'name', 'date': 'created_at', 'role': 'is_admin' };
+        const dbColumn = sortMap[sort] || 'created_at';
+        const dbOrder = (order.toUpperCase() === 'ASC') ? 'ASC' : 'DESC';
+
+        let sql = `SELECT id, name, username, email, is_admin, created_at FROM users`;
+        let params = [];
+
+        if (search) {
+            sql += ` WHERE name LIKE ? OR username LIKE ?`;
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        sql += ` ORDER BY ${dbColumn} ${dbOrder}`;
+
+        const [users] = await pool.query(sql, params);
+
+        res.render('admin', { users, currentSort: sort, currentOrder: order, search });
+
     } catch (err) {
+        console.error(err);
         res.status(500).send("사용자 목록 로드 실패");
     }
 });
 
-// ==========================================
+
 // [관리자] 2. 사용자 강제 탈퇴 (삭제)
-// ==========================================
 router.post('/admin/users/:id/delete', async (req, res) => {
     // 관리자 체크
     if (!req.session.user || req.session.user.is_admin !== 1) {
@@ -116,10 +132,10 @@ router.post('/admin/users/:id/delete', async (req, res) => {
     try {
         // 1. 해당 유저가 쓴 게시글 먼저 삭제 (Foreign Key 에러 방지용, 필요시)
         await pool.query('DELETE FROM posts WHERE author_id = ?', [targetId]);
-        
+
         // 2. 유저 삭제
         await pool.query('DELETE FROM users WHERE id = ?', [targetId]);
-        
+
         res.send(`<script>alert('회원이 삭제되었습니다.'); location.href='/admin';</script>`);
     } catch (err) {
         console.error(err);
@@ -127,31 +143,29 @@ router.post('/admin/users/:id/delete', async (req, res) => {
     }
 });
 
-// ==========================================
 // [관리자] 3. 권한 변경 (일반유저 <-> 관리자)
-// ==========================================
 router.post('/admin/users/:id/role', async (req, res) => {
-    if (!req.session.user || req.session.user.is_admin !== 1) return res.status(403).send("권한 없음");
+    if (!req.session.user || req.session.user.is_admin !== 1) {
+        return res.status(403).json({ success: false, message: "권한 없음" });
+    }
 
     const targetId = req.params.id;
-    const { is_admin } = req.body; // 1이면 관리자, 0이면 일반
+    const { is_admin } = req.body;
 
-    // 자기 자신 권한 해제 방지
     if (parseInt(targetId) === req.session.user.id) {
-        return res.send(`<script>alert('자신의 관리자 권한은 해제할 수 없습니다.'); history.back();</script>`);
+        return res.json({ success: false, message: "자기 자신의 권한은 변경할 수 없습니다." });
     }
 
     try {
         await pool.query('UPDATE users SET is_admin = ? WHERE id = ?', [is_admin, targetId]);
-        res.redirect('/admin');
+        res.json({ success: true });
     } catch (err) {
-        res.status(500).send("권한 수정 오류");
+        res.status(500).json({ success: false, message: "오류 발생" });
     }
 });
 
-// ==========================================
+
 // [관리자] 4. 회원정보 수정 페이지 보여주기 (GET)
-// ==========================================
 router.get('/admin/users/:id/edit', async (req, res) => {
     // 1. 관리자 권한 체크
     if (!req.session.user || req.session.user.is_admin !== 1) {
@@ -160,7 +174,7 @@ router.get('/admin/users/:id/edit', async (req, res) => {
 
     try {
         const targetId = req.params.id;
-        
+
         // 2. 수정할 회원 정보 가져오기
         const [[user]] = await pool.query("SELECT * FROM users WHERE id = ?", [targetId]);
 
@@ -176,9 +190,7 @@ router.get('/admin/users/:id/edit', async (req, res) => {
     }
 });
 
-// ==========================================
 // [관리자] 5. 회원정보 수정 저장하기 (POST)
-// ==========================================
 router.post('/admin/users/:id/update', async (req, res) => {
     // 1. 관리자 권한 체크
     if (!req.session.user || req.session.user.is_admin !== 1) {
@@ -204,5 +216,4 @@ router.post('/admin/users/:id/update', async (req, res) => {
     }
 });
 
-module.exports = router;
 module.exports = router;

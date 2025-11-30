@@ -20,7 +20,7 @@ h1 {
     background: #fff;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 20px;
 }
 
@@ -65,7 +65,8 @@ input[type="text"] {
     width: 250px;
 }
 
-button, .btn {
+button,
+.btn {
     padding: 8px 14px;
     background: #007bff;
     color: white;
@@ -76,7 +77,8 @@ button, .btn {
     text-decoration: none;
 }
 
-button:hover, .btn:hover {
+button:hover,
+.btn:hover {
     background: #0056b3;
 }
 
@@ -112,7 +114,8 @@ button:hover, .btn:hover {
 }
 
 /* 입력 필드 */
-input, textarea {
+input,
+textarea {
     width: 100%;
     padding: 10px;
     margin-top: 8px;
@@ -132,4 +135,34 @@ input, textarea {
     input[type="text"] {
         width: 100%;
     }
+}
+
+/* 카테고리 */
+.category-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.category-tabs a {
+    text-decoration: none;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    background-color: #f1f1f1;
+    transition: all 0.2s;
+}
+
+.category-tabs a:hover {
+    background-color: #e0e0e0;
+}
+
+/* 현재 선택된 카테고리 강조 */
+.category-tabs a.active-tab {
+    background-color: #333;
+    color: white;
 }

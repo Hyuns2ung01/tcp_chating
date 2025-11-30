@@ -13,6 +13,7 @@ const pool = require('./db');
 // 서버 만들기
 const server = http.createServer(app);
 const io = new Server(server);
+app.set('io', io);
 
 // 라우터 불러오기
 const postsRouter = require('./routes/posts');
@@ -54,50 +55,46 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
     console.log('유저 접속됨');
 
-    // 1. 방 입장 (옆에 이름도 띄움)
+    // 1. 방 입장 (Join) - [수정됨]
     socket.on('join room', (data) => {
-        // data = { roomId, name }
-        socket.join(data.roomId);
-        console.log(`${data.name}님이 ${data.roomId}번 방에 입장함`);
-
-        // [시스템 메시지] 입장 알림 전송
-        io.to(data.roomId).emit('system message', {
-            text: `👋 ${data.name}님이 입장하셨습니다.`
-        });
+        // data가 { roomId, name } 형태로 옴
+        // 확실하게 data.roomId로 방에 넣어야 함!
+        const roomId = data.roomId;
+        socket.join(roomId);
+        console.log(`${data.name}님이 ${roomId}번 방에 입장했습니다.`);
     });
 
-    // 2. 방 나가기
-    socket.on('leave room', (data) => {
-        // data = { roomId, name }
-        socket.leave(data.roomId); // 소켓을 방에서 뺌
-        console.log(`${data.name}님이 ${data.roomId}번 방을 나감`);
-
-        // [시스템 메시지] 퇴장 알림
-        io.to(data.roomId).emit('system message', {
-            text: `🚪 ${data.name}님이 퇴장하셨습니다.`
-        });
-    });
-
-    // 3. 메시지 전송
+    // 2. 메시지 전송 및 저장 - [수정됨]
     socket.on('chat message', async (data) => {
         try {
+            // (1) DB에 저장
             await pool.query(
                 'INSERT INTO chat_messages (room_id, user_id, content) VALUES (?, ?, ?)',
                 [data.roomId, data.userId, data.text]
             );
 
+            // (2) 같은 방 사람들에게 전송
             io.to(data.roomId).emit('chat message', {
+                roomId: data.roomId,
                 name: data.name,
                 text: data.text,
-                user_id: data.userId
+                user_id: data.userId,
+                time: new Date() // [추가됨] 현재 시간 정보를 같이 보냄!
             });
         } catch (err) {
-            console.error(err);
+            console.error("채팅 저장 에러:", err);
         }
     });
 
+    // 3. 방 나가기 (Leave)
+    socket.on('leave room', (data) => {
+        const roomId = data.roomId;
+        socket.leave(roomId);
+        console.log(`${data.name}님이 ${roomId}번 방을 나감`);
+    });
+
     socket.on('disconnect', () => {
-        console.log('유저 연결 끊김');
+        console.log('유저 나감');
     });
 });
 

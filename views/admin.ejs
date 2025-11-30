@@ -1,166 +1,414 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
-    <title>관리자 페이지 - 회원 관리</title>
-    <link rel="stylesheet" href="/style.css">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { width: 1000px; margin: 40px auto; font-family: 'Apple SD Gothic Neo', sans-serif; background-color: #f9f9f9; }
-        
-        .header {
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 40px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .admin-container {
+            width: 1100px;
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 상단 헤더 */
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid #4CAF50;
-            padding-bottom: 10px;
+            border-bottom: 2px solid #f5f5f5;
+            padding-bottom: 20px;
             margin-bottom: 20px;
         }
-        h1 { margin: 0; color: #333; }
-        
-        /* 테이블 스타일 개선 */
-        table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0; 
-            background: white; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        
-        th, td { 
-            padding: 15px 10px; 
-            text-align: center; 
-            border-bottom: 1px solid #eee; 
+
+        .btn-home {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            padding: 10px 20px;
+            background-color: #f1f3f5;
+            border-radius: 10px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-home:hover {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        /* 컨트롤 바 (총 회원수 + 검색) */
+        .control-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-count {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-input {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.95em;
+            width: 250px;
+        }
+
+        .search-input:focus {
+            border-color: #4CAF50;
+        }
+
+        .btn-search {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-search:hover {
+            background-color: #43a047;
+        }
+
+        .btn-reset {
+            background-color: #999;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .btn-reset:hover {
+            background-color: #777;
+        }
+
+        /* 테이블 */
+        .user-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+        }
+
+        .user-table th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: bold;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #eee;
             font-size: 0.95em;
         }
-        
-        th { 
-            background-color: #f1f3f5; 
-            color: #555; 
-            font-weight: bold; 
-            white-space: nowrap; /* 제목 줄바꿈 방지 */
-        }
-        
-        /* 마우스 올렸을 때 효과 */
-        tr:hover { background-color: #f8fff8; }
 
-        /* 수정 링크 스타일 */
-        .edit-link {
-            color: #333;
+        .sort-link {
             text-decoration: none;
-            font-weight: bold;
+            color: inherit;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .sort-link:hover {
+            color: #2196F3;
+        }
+
+        .sort-icon {
+            font-size: 0.8em;
+            color: #ccc;
+        }
+
+        .sort-icon.active {
+            color: #2196F3;
+        }
+
+        .user-table td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #f1f1f1;
+            vertical-align: middle;
+            text-align: center;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .user-table td.align-left {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .user-table tr:hover {
+            background-color: #fafafa;
+        }
+
+        .user-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-link:hover {
+            color: #2196F3;
+        }
+
+        .badge {
+            display: inline-block;
             padding: 5px 10px;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-        .edit-link:hover {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
         }
 
-        /* 뱃지 스타일 */
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
-        .badge-admin { background-color: #e3f2fd; color: #1565c0; }
-        .badge-user { background-color: #f5f5f5; color: #616161; }
+        .badge-admin {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
 
-        /* 버튼 그룹 가로 정렬 */
+        .badge-user {
+            background-color: #f5f5f5;
+            color: #616161;
+            border: 1px solid #eee;
+        }
+
         .action-buttons {
             display: flex;
             justify-content: center;
-            gap: 6px; /* 버튼 사이 간격 */
+            gap: 6px;
         }
 
-        /* 버튼 스타일 최적화 */
-        .btn {
+        .btn-mini {
             border: none;
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.85em;
-            font-weight: bold;
-            transition: opacity 0.2s;
-            white-space: nowrap; /* 버튼 글자 줄바꿈 방지 */
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        .btn:hover { opacity: 0.8; }
-        
-        .btn-role { background-color: #2196F3; color: white; }
-        .btn-del { background-color: #ff5252; color: white; }
 
-        .back-link { 
-            display: inline-block; 
-            margin-top: 20px; 
-            text-decoration: none; 
-            color: #666; 
-            font-weight: bold; 
+        .btn-mini:hover {
+            transform: translateY(-2px);
         }
-        .back-link:hover { color: #4CAF50; }
+
+        .btn-role {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-del {
+            background-color: #ff5252;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
 
-    <div class="header">
-        <h1>👑 회원 관리</h1>
-        <span>총 <strong><%= users.length %></strong>명</span>
+    <div class="admin-container">
+
+        <div class="page-header">
+            <h1><i class="fa-solid fa-users-gear" style="color: #4CAF50;"></i> 회원 관리</h1>
+            <a href="/posts" class="btn-home"><i class="fa-solid fa-house"></i> 게시판으로</a>
+        </div>
+
+        <div class="control-bar">
+            <span class="user-count">총 회원 <strong>
+                    <%= users.length %>
+                </strong>명</span>
+
+            <form action="/admin" method="GET" class="search-form">
+                <input type="hidden" name="sort" value="<%= currentSort %>">
+                <input type="hidden" name="order" value="<%= currentOrder %>">
+
+                <input type="text" name="search" class="search-input" value="<%= search %>" placeholder="이름 또는 아이디 검색">
+                <button type="submit" class="btn-search"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
+
+                <% if (search) { %>
+                    <a href="/admin" class="btn-reset" title="초기화"><i class="fa-solid fa-rotate-left"></i></a>
+                    <% } %>
+            </form>
+        </div>
+
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;"><a
+                            href="/admin?sort=id&order=<%= currentSort==='id' && currentOrder==='asc' ? 'desc' : 'asc' %>&search=<%= search %>"
+                            class="sort-link">ID <% if (currentSort==='id' ) { %><i
+                                    class="fa-solid fa-sort-<%= currentOrder==='asc' ? 'up' : 'down' %> sort-icon active"></i>
+                                <% } else { %><i class="fa-solid fa-sort sort-icon"></i>
+                                    <% } %></a></th>
+                    <th class="align-left">이름</th>
+                    <th class="align-left">아이디 / 이메일</th>
+                    <th style="width: 150px;"><a
+                            href="/admin?sort=date&order=<%= currentSort==='date' && currentOrder==='asc' ? 'desc' : 'asc' %>&search=<%= search %>"
+                            class="sort-link">가입일 <% if (currentSort==='date' ) { %><i
+                                    class="fa-solid fa-sort-<%= currentOrder==='asc' ? 'up' : 'down' %> sort-icon active"></i>
+                                <% } else { %><i class="fa-solid fa-sort sort-icon"></i>
+                                    <% } %></a></th>
+                    <th style="width: 100px;"><a
+                            href="/admin?sort=role&order=<%= currentSort==='role' && currentOrder==='asc' ? 'desc' : 'asc' %>&search=<%= search %>"
+                            class="sort-link">권한 <% if (currentSort==='role' ) { %><i
+                                    class="fa-solid fa-sort-<%= currentOrder==='asc' ? 'up' : 'down' %> sort-icon active"></i>
+                                <% } else { %><i class="fa-solid fa-sort sort-icon"></i>
+                                    <% } %></a></th>
+                    <th style="width: 160px;">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (users.length===0) { %>
+                    <tr>
+                        <td colspan="6" style="padding: 50px; color: #999;">검색된 회원이 없습니다.</td>
+                    </tr>
+                    <% } else { %>
+                        <% users.forEach(u=> { %>
+                            <tr>
+                                <td style="color: #888; font-weight:bold;">#<%= u.id %>
+                                </td>
+                                <td class="align-left">
+                                    <a href="/admin/users/<%= u.id %>/edit" class="user-link">
+                                        <%= u.name %> <i class="fa-solid fa-pen"
+                                                style="font-size:0.7em; color:#bbb;"></i>
+                                    </a>
+                                </td>
+                                <td class="align-left">
+                                    <div style="font-weight:bold; color:#555;">
+                                        <%= u.username %>
+                                    </div>
+                                    <div style="font-size:0.85em; color:#999;">
+                                        <%= u.email %>
+                                    </div>
+                                </td>
+                                <td style="color: #666;">
+                                    <%= new Date(u.created_at).toLocaleDateString() %>
+                                </td>
+
+                                <td>
+                                    <% if (u.is_admin) { %>
+                                        <span id="badge-<%= u.id %>" class="badge badge-admin">관리자</span>
+                                        <% } else { %>
+                                            <span id="badge-<%= u.id %>" class="badge badge-user">일반</span>
+                                            <% } %>
+                                </td>
+
+                                <td>
+                                    <div class="action-buttons">
+                                        <button id="btn-role-<%= u.id %>" class="btn-mini btn-role"
+                                            onclick="changeRole('<%= u.id %>', '<%= u.is_admin %>')">
+                                            <% if (u.is_admin) { %> <i class="fa-solid fa-arrow-down"></i> 해제 <% } else
+                                                    { %> <i class="fa-solid fa-arrow-up"></i> 승격 <% } %>
+                                        </button>
+
+                                        <form action="/admin/users/<%= u.id %>/delete" method="POST"
+                                            onsubmit="return confirm('정말 삭제하시겠습니까?');" style="margin:0;">
+                                            <button type="submit" class="btn-mini btn-del"><i
+                                                    class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                                <% } %>
+            </tbody>
+        </table>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 50px;">ID</th>
-                <th>이름 (수정)</th> <th>아이디</th>
-                <th>이메일</th>
-                <th style="width: 100px;">가입일</th>
-                <th style="width: 80px;">권한</th>
-                <th style="width: 140px;">관리</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% users.forEach(u => { %>
-                <tr>
-                    <td><%= u.id %></td>
-                    
-                    <td>
-                        <a href="/admin/users/<%= u.id %>/edit" class="edit-link" title="정보 수정">
-                            <%= u.name %> ✏️
-                        </a>
-                    </td>
+    <script>
+        async function changeRole(userId, currentIsAdmin) {
+            const nextState = currentIsAdmin ? 0 : 1;
 
-                    <td><%= u.username %></td>
-                    <td><%= u.email %></td>
-                    <td><%= new Date(u.created_at).toLocaleDateString() %></td>
-                    
-                    <td>
-                        <% if (u.is_admin) { %>
-                            <span class="badge badge-admin">관리자</span>
-                        <% } else { %>
-                            <span class="badge badge-user">일반</span>
-                        <% } %>
-                    </td>
-                    
-                    <td>
-                        <div class="action-buttons">
-                            <form action="/admin/users/<%= u.id %>/role" method="POST">
-                                <input type="hidden" name="is_admin" value="<%= u.is_admin ? 0 : 1 %>">
-                                <button type="submit" class="btn btn-role">
-                                    <%= u.is_admin ? '▼ 해제' : '▲ 승격' %>
-                                </button>
-                            </form>
+            try {
+                const res = await fetch(`/admin/users/${userId}/role`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_admin: nextState })
+                });
 
-                            <form action="/admin/users/<%= u.id %>/delete" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                                <button type="submit" class="btn btn-del">삭제</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            <% }) %>
-        </tbody>
-    </table>
+                const data = await res.json();
 
-    <a href="/posts" class="back-link">← 게시판으로 돌아가기</a>
+                if (data.success) {
+                    // 화면 업데이트
+                    const badge = document.getElementById(`badge-${userId}`);
+                    const btn = document.getElementById(`btn-role-${userId}`);
+
+                    if (nextState === 1) {
+                        badge.className = 'badge badge-admin';
+                        badge.innerText = '관리자';
+                        btn.innerHTML = '<i class="fa-solid fa-arrow-down"></i> 해제';
+                    } else {
+                        badge.className = 'badge badge-user';
+                        badge.innerText = '일반';
+                        btn.innerHTML = '<i class="fa-solid fa-arrow-up"></i> 승격';
+                    }
+
+                    // 다음 클릭을 위해 onclick 속성 갱신
+                    btn.setAttribute('onclick', `changeRole('${userId}', ${nextState})`);
+                } else {
+                    alert(data.message || "오류가 발생했습니다.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("서버 통신 오류");
+            }
+        }
+    </script>
 
 </body>
+
 </html>

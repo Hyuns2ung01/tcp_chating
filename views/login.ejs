@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인</title>
-    <link rel="stylesheet" href="/style.css"> 
+    <link rel="stylesheet" href="/style.css">
     <style>
         /* 배경 및 중앙 정렬 (회원가입 페이지와 동일) */
         body {
@@ -25,7 +26,8 @@
             border-radius: 15px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 360px; /* 회원가입보다 입력이 적으므로 폭을 살짝 좁게 */
+            max-width: 360px;
+            /* 회원가입보다 입력이 적으므로 폭을 살짝 좁게 */
             text-align: center;
         }
 
@@ -102,11 +104,12 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="login-container">
         <h2>🔐 로그인</h2>
-        
+
         <form action="/login" method="POST">
             <div class="form-group">
                 <input type="text" name="username" placeholder="아이디" required>
@@ -114,7 +117,7 @@
             <div class="form-group">
                 <input type="password" name="password" placeholder="비밀번호" required>
             </div>
-            
+
             <button type="submit" class="btn-submit">로그인</button>
         </form>
 
@@ -125,4 +128,5 @@
     </div>
 
 </body>
+
 </html>

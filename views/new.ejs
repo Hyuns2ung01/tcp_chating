@@ -1,41 +1,195 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-    <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
     <title>새 글 작성</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { width: 800px; margin: auto; font-family: sans-serif; }
-        input, textarea { width: 100%; padding: 8px; margin-bottom: 15px; }
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 50px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 흰색 카드 박스 */
+        .write-container {
+            width: 800px;
+            background: #fff;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 헤더 스타일 */
+        .page-header {
+            border-bottom: 2px solid #f5f5f5;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 폼 스타일 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        label i {
+            margin-right: 5px;
+            color: #888;
+        }
+
+        /* 입력창 디자인 */
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            background-color: #fafafa;
+            outline: none;
+            box-sizing: border-box;
+            /* 패딩 포함 크기 계산 */
+            transition: all 0.2s;
+            font-family: inherit;
+            /* 폰트 상속 */
+        }
+
+        /* 포커스 효과 */
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #4CAF50;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        textarea {
+            height: 400px;
+            /* 높이 넉넉하게 */
+            resize: vertical;
+            /* 세로 크기 조절만 허용 */
+            line-height: 1.6;
+        }
+
+        /* 하단 버튼 그룹 */
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            border-top: 1px solid #f5f5f5;
+            padding-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background-color: #f1f3f5;
+            color: #666;
+        }
+
+        .btn-back:hover {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .btn-submit {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-submit:hover {
+            background-color: #43a047;
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+        }
     </style>
 </head>
+
 <body>
-    <h1>카테고리</h1>
-    <form action="/posts" method="POST">
-    
-    <div style="margin-bottom: 15px;">
-        <label for="category" style="font-weight:bold;">카테고리:</label>
-        <select name="category" id="category" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-            <option value="자유">자유</option>
-            <option value="중고거래">📦 중고거래</option>
-            <option value="공구">🛒 공구</option>
-            <option value="가입인사">👋 가입인사</option>
-            <% if (user && user.is_admin) { %>
-                <option value="공지" style="color:red; font-weight:bold;">📢 공지사항</option>
-            <% } %>
-        </select>
+
+    <div class="write-container">
+
+        <div class="page-header">
+            <h1><i class="fa-solid fa-pen-to-square" style="color: #4CAF50;"></i> 새 글 작성</h1>
+        </div>
+
+        <form action="/posts" method="POST">
+
+            <div class="form-group">
+                <label for="category"><i class="fa-solid fa-list"></i> 카테고리</label>
+                <select name="category" id="category">
+                    <option value="자유">🌱 자유게시판</option>
+                    <option value="중고거래">📦 중고거래</option>
+                    <option value="공구">🛒 공동구매</option>
+                    <option value="가입인사">👋 가입인사</option>
+
+                    <% if (user && user.is_admin) { %>
+                        <option value="공지" style="color:red; font-weight:bold;">📢 공지사항</option>
+                        <% } %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="title"><i class="fa-solid fa-heading"></i> 제목</label>
+                <input type="text" name="title" id="title" placeholder="제목을 입력하세요" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="content"><i class="fa-solid fa-align-left"></i> 내용</label>
+                <textarea name="content" id="content" placeholder="내용을 자유롭게 작성해주세요." required></textarea>
+            </div>
+
+            <div class="btn-group">
+                <a href="/posts" class="btn btn-back">
+                    <i class="fa-solid fa-arrow-left"></i> 목록으로
+                </a>
+                <button type="submit" class="btn btn-submit">
+                    <i class="fa-solid fa-paper-plane"></i> 작성완료
+                </button>
+            </div>
+
+        </form>
     </div>
-    </form>
 
-    <hr>
-    <h1>✏ 새 글 작성</h1>
-
-    <form action="/posts" method="POST">
-        <input type="text" name="title" placeholder="제목" required />
-        <textarea name="content" rows="10" placeholder="내용" required></textarea>
-        <button type="submit">작성하기</button>
-    </form>
-
-    <a href="/posts">← 목록으로</a>
 </body>
+
 </html>
