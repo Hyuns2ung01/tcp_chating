@@ -170,7 +170,7 @@ router.post('/start', checkLogin, async (req, res) => {
 
         // CASE 2: 중고 (1:1 채팅)
         else {
-            const roomTitle = `[문의] ${postTitle}`;
+            const roomTitle = `[중고거래] ${postTitle}`;
             const [result] = await pool.query(
                 'INSERT INTO chat_rooms (title, owner_id) VALUES (?, ?)',
                 [roomTitle, myId]
@@ -187,6 +187,79 @@ router.post('/start', checkLogin, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send("채팅방 연결 오류 (DB 컬럼 linked_post_id 확인 필요)");
+    }
+});
+
+// 7. 채팅방 나가기 (DB 삭제)
+router.post('/api/leave', checkLogin, async (req, res) => {
+    try {
+        const { roomId } = req.body;
+        const userId = req.session.user.id;
+
+        // 1. 멤버 테이블에서 삭제 (방 나가기)
+        await pool.query('DELETE FROM room_members WHERE room_id = ? AND user_id = ?', [roomId, userId]);
+
+        // 2. 방에 남은 사람이 있는지 확인
+        const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM room_members WHERE room_id = ?', [roomId]);
+
+        // 3. 아무도 없으면 방 자체를 삭제 (청소)
+        if (count === 0) {
+            await pool.query('DELETE FROM chat_rooms WHERE id = ?', [roomId]);
+        }
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "방 나가기 오류" });
+    }
+});
+
+// 8. 채팅방 멤버 목록 가져오기 API
+router.get('/api/:roomId/members', checkLogin, async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+
+        // room_members 테이블과 users 테이블을 조인해서 이름 가져오기
+        const [members] = await pool.query(`
+            SELECT u.name, u.username, u.id
+            FROM room_members rm
+            JOIN users u ON rm.user_id = u.id
+            WHERE rm.room_id = ?
+            ORDER BY u.name ASC
+        `, [roomId]);
+
+        res.json({ success: true, members });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "멤버 로드 실패" });
+    }
+});
+
+// 9. 유저 검색 API (이름 또는 아이디로 검색)
+router.get('/api/users/search', checkLogin, async (req, res) => {
+    try {
+        const keyword = req.query.keyword;
+        const myId = req.session.user.id;
+
+        if (!keyword) return res.json({ users: [] });
+
+        // 나(myId)는 제외하고 검색
+        // 이름(name) 또는 아이디(username)에 키워드가 포함된 사람 찾기
+        const [users] = await pool.query(`
+            SELECT id, username, name 
+            FROM users 
+            WHERE (name LIKE ? OR username LIKE ?) 
+            AND id != ?
+            LIMIT 10
+        `, [`%${keyword}%`, `%${keyword}%`, myId]);
+
+        res.json({ users });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "검색 오류" });
     }
 });
 
