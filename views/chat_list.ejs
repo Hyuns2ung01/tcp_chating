@@ -731,9 +731,7 @@
             const msgList = document.getElementById('messages');
             msgList.innerHTML = '';
 
-            // 과거 메시지 로드
             data.messages.forEach(msg => {
-                // DB 시간(created_at)을 그대로 사용
                 addMessageToScreen(msg.name, msg.content, msg.user_id === myId, msg.created_at);
             });
 
@@ -755,13 +753,35 @@
                 input.focus();
             }
         });
-
         socket.on('chat message', (data) => {
-            if (String(data.roomId) === String(currentRoomId)) {
-                // 실시간 메시지는 data.time을 쓰거나, 없으면 현재 시간 사용
+            const roomItem = document.getElementById(`room-${data.roomId}`);
+            const incomingRoomId = String(data.roomId);
+            const activeRoomId = String(currentRoomId);
+
+            if (roomItem) {
+                roomItem.querySelector('.room-desc').innerText = data.text;
+                roomItem.querySelector('.room-time').innerText = '방금';
+
+                const ul = document.querySelector('.room-list');
+                ul.prepend(roomItem);
+            }
+
+            if (incomingRoomId === activeRoomId) {
                 const time = data.time || new Date();
                 addMessageToScreen(data.name, data.text, data.user_id === myId, time);
                 scrollToBottom();
+
+                fetch(`/chat/api/read/${incomingRoomId}`, { method: 'POST' });
+            }
+
+            else {
+                const badge = document.getElementById(`badge-${incomingRoomId}`);
+                if (badge) {
+                    let count = parseInt(badge.innerText) || 0;
+                    badge.innerText = count + 1;
+                    badge.style.display = 'inline-block';
+                    badge.style.backgroundColor = '#ff3b30';
+                }
             }
         });
 

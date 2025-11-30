@@ -55,40 +55,41 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
     console.log('유저 접속됨');
 
-    // 1. 방 입장 (Join) - [수정됨]
+    // 1. 방 입장
     socket.on('join room', (data) => {
-        // data가 { roomId, name } 형태로 옴
-        // 확실하게 data.roomId로 방에 넣어야 함!
-        const roomId = data.roomId;
+        // [핵심] 방 번호를 문자로 확실하게 변환!
+        const roomId = String(data.roomId);
         socket.join(roomId);
         console.log(`${data.name}님이 ${roomId}번 방에 입장했습니다.`);
     });
 
-    // 2. 메시지 전송 및 저장 - [수정됨]
+    // 2. 메시지 전송
     socket.on('chat message', async (data) => {
         try {
-            // (1) DB에 저장
+            // DB 저장
             await pool.query(
                 'INSERT INTO chat_messages (room_id, user_id, content) VALUES (?, ?, ?)',
                 [data.roomId, data.userId, data.text]
             );
 
-            // (2) 같은 방 사람들에게 전송
-            io.to(data.roomId).emit('chat message', {
-                roomId: data.roomId,
+            // [핵심] 보낼 때도 방 번호를 문자로 변환해서 전송
+            const roomId = String(data.roomId);
+
+            io.to(roomId).emit('chat message', {
+                roomId: roomId, // 클라이언트 확인용 방 번호
                 name: data.name,
                 text: data.text,
                 user_id: data.userId,
-                time: new Date() // [추가됨] 현재 시간 정보를 같이 보냄!
+                time: new Date()
             });
         } catch (err) {
             console.error("채팅 저장 에러:", err);
         }
     });
 
-    // 3. 방 나가기 (Leave)
+    // 3. 방 나가기
     socket.on('leave room', (data) => {
-        const roomId = data.roomId;
+        const roomId = String(data.roomId);
         socket.leave(roomId);
         console.log(`${data.name}님이 ${roomId}번 방을 나감`);
     });
