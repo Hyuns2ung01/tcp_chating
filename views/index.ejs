@@ -311,15 +311,18 @@
     <h1>📋 게시글 목록</h1>
 
     <div class="category-tabs">
-        <a href="/posts?category=all&search=<%= search %>"
-            class="<%= category === 'all' ? 'active-tab' : '' %>">전체보기</a>
-        <a href="/posts?category=자유&search=<%= search %>" class="<%= category === '자유' ? 'active-tab' : '' %>">자유게시판</a>
-        <a href="/posts?category=중고거래&search=<%= search %>" class="<%= category === '중고거래' ? 'active-tab' : '' %>">📦
-            중고거래</a>
-        <a href="/posts?category=공구&search=<%= search %>" class="<%= category === '공구' ? 'active-tab' : '' %>">🛒 공구</a>
+        <a href="/posts?category=all&search=<%= search %>" class="<%= category === 'all' ? 'active-tab' : '' %>">📃
+            전체보기</a>
+        <a href="/posts?category=공지&search=<%= search %>" class="<%= category === '공지' ? 'active-tab' : '' %>">📢
+            공지사항</a>
+        <a href="/posts?category=자유&search=<%= search %>" class="<%= category === '자유' ? 'active-tab' : '' %>">🌱
+            자유게시판</a>
         <a href="/posts?category=가입인사&search=<%= search %>" class="<%= category === '가입인사' ? 'active-tab' : '' %>">👋
             가입인사</a>
-        <a href="/posts?category=공지&search=<%= search %>" class="<%= category === '공지' ? 'active-tab' : '' %>">📢 공지</a>
+        <a href="/posts?category=중고거래&search=<%= search %>" class="<%= category === '중고거래' ? 'active-tab' : '' %>">📦
+            중고거래</a>
+        <a href="/posts?category=공구&search=<%= search %>" class="<%= category === '공구' ? 'active-tab' : '' %>">🛒
+            공동구매</a>
     </div>
 
     <div class="top-bar">
